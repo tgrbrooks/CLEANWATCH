@@ -14,7 +14,9 @@ import Nrate
 import os
 from ast import literal_eval
 from math import pow
+import copy
 import numpy as np
+import matplotlib.pyplot as plt
 #from uncertainties import ufloat
 #Vars
 compList = ['PMT', 'VETO', 'TANK', 'CONC', 'ROCK', 'WATER', 'GD']
@@ -92,13 +94,14 @@ compAct = []
 compEff = []
 tot = 0
 timeD = 0
+
 #funcs
 def menu(): #menu text
     """
     Displays options
     """
     a = ''
-    options = ['a', 'e', 'bgr', 'exit', 'td', 'maxbg', 'cb', 'mintd']
+    options = ['a', 'e', 'bgr', 'exit', 'td', 'maxbg', 'cb', 'mintd', 'plt']
     while a.lower() not in options:
         print('##################################################')
         print('CLEANWATCH, V1.11')
@@ -111,6 +114,7 @@ def menu(): #menu text
         print('- Minimum Time Detection         [mintd]')
         print('- Calculate Maximum Background   [maxbg]')
         print('- Cleanliness Budget             [cb]')
+        print('- Make Plots                     [plt]')
         print('- Exit software                  [exit]')
         print('##################################################')
         a = str(input('Select an option: '))
@@ -567,7 +571,8 @@ def tdcalc(BG):
     B = signal*1.035 + BG
     S = signal*0.9
     sigma = 4.65
-    td = pow(sigma, 2)*((B+(B+S)/(3/2)))*(1/pow(S,2)) #/((60**2)*24) #[days] 
+    R_onoff = 1.5
+    td = pow(sigma, 2)*((B+(B+S)/R_onoff))*(1/pow(S,2))*(1+R_onoff) #/((60**2)*24) #[days] 
     #convert to days
     #td /= (pow(60,2)*24)
     print('Reactor off time to detection @ 3 sigma rate = %.5e' % td + ' days')
@@ -615,6 +620,93 @@ def CBOUT(IsoAct, BGIsoCB, Iso): #BGIso, Iso): #(, , ,COMP.IsoList)
     for i in range(len(IsoAct)):
         print('Radioactivity Budget for %.7s = %.5e' % (Iso[i], IsoAct[i]))
         #print('Nominal singles rate for %.7s = %.5e Hz' % (Iso[i], sum(BGIso[i]))) #????
+
+def PNRates(Eff, Iso, IsoDecay, Nr, Act, ignore=0):
+    BG_P = 0
+    BG_N = 0
+    N = [[0 for x in range(len(Eff[i]))] for i in range(len(Eff))]
+    P = [[0 for x in range(len(Eff[i]))] for i in range(len(Eff))]
+    for i in range(len(Iso)-ignore):
+        for x in range(len(IsoDecay[i])):
+            if IsoDecay[i][x] == 'Tl210':
+                P[i][x] = (Eff[i][x]*Act[i]*0.002)
+                N[i][x] = (Nr[i][x]*Act[i]*0.002)
+            else:
+                P[i][x] = (Act[i]*Eff[i][x])
+                N[i][x] = (Act[i]*Nr[i][x])
+    for i in range(len(P)):
+        BG_P += sum(P[i])
+    for i in range(len(N)):
+        BG_N += sum(N[i])
+    return BG_P, BG_N
+
+def Background():
+
+    totBG_P = 0
+    totBG_N = 0
+
+    ## Calculate the background prompt and delayed rates
+    PMTBG_P, PMTBG_N = PNRates(PMTEff, Iso.PMT, PMT.IsoDecay, PMT_Nr, PMTAct)
+    totBG_P += PMTBG_P
+    totBG_N += PMTBG_N
+    VETOBG_P, VETOBG_N = PNRates(VETOEff, Iso.VETO, VETO.IsoDecay, VETO_Nr, VETOAct)
+    totBG_P += VETOBG_P
+    totBG_N += VETOBG_N
+    TANKBG_P, TANKBG_N = PNRates(TANKEff, Iso.TANK, TANK.IsoDecay, TANK_Nr, TANKAct)
+    totBG_P += TANKBG_P
+    totBG_N += TANKBG_N
+    CONCBG_P, CONCBG_N = PNRates(CONCEff, Iso.CONC, CONC.IsoDecay, CONC_Nr, CONCAct)
+    totBG_P += CONCBG_P
+    totBG_N += CONCBG_N
+    ROCKBG_P, ROCKBG_N = PNRates(ROCKEff, Iso.ROCK, ROCK.IsoDecay, ROCK_Nr, ROCKAct, 1)
+    totBG_P += ROCKBG_P
+    totBG_N += ROCKBG_N
+    WATERBG_P, WATERBG_N = PNRates(WATEREff, Iso.WATER, WATER.IsoDecay, WATER_Nr, WATERAct, 1)
+    totBG_P += WATERBG_P
+    totBG_N += WATERBG_N
+    GDBG_P, GDBG_N = PNRates(GDEff, Iso.GD, GD.IsoDecay, GD_Nr, GDAct)
+    totBG_P += GDBG_P
+    totBG_N += GDBG_N
+    
+    signal = 0.387
+    S = signal*0.9
+
+    # Total accidental rate
+    totAcc = totBG_P*totBG_N*0.0001*0.05*(pow(60,2)*24)
+    # + fast neutrons + radionucleotides
+    totBG = totAcc+ROCKAct[-1]+WATERAct[-1]
+    # + other core + 15% other neutrinos
+    background = totBG + S*1.15
+    return background
+
+def BackgroundRatio(signal, days, sigma):
+
+    background = Background()
+
+    # Maximum allowed background
+    signal = 0.387
+    S = signal*0.9
+    days = 500#1.92437e+02
+    sigma = 3#4.65
+    #B = (1.5*days*pow(S, 2))/(2.5*pow(sigma, 2)) - S/2.5
+    #MBG = B - (S*1.15) # FIXME think this is wrong!
+    R_onoff = 1.5
+    MBG = np.power(S, 2.)*days*R_onoff/(np.power(sigma, 2.)*np.power(1+R_onoff, 2.)) - S/(R_onoff+1.) 
+
+    return background/MBG
+
+def DwellTime(signal, sigma):
+
+    # Maximum allowed background
+    B = Background()
+    signal = 0.387
+    S = signal*0.9
+    sigma = 4.65
+    R_onoff = 1.5
+    D = np.power(sigma, 2.)*((S + B)/R_onoff + B)*(1. + R_onoff)/np.power(S, 2.)
+    #D = np.power(sigma, 2.)*(B*(R_onoff+1.) + S*R_onoff)/((1. + R_onoff)*np.power(S, 2.))
+    return D
+
 ######################################################################################################
 ans = menu()
 while ans.lower() != 'exit':
@@ -808,6 +900,143 @@ while ans.lower() != 'exit':
         GD_CB_Act = GD.revActivity(GD_CB_BG, GDEff,GD_Nr)
         #print(CD_CB_Act)
         CBOUT(GD_CB_Act, GD_CB_BG, GD.IsoList)
+        #reset
+        clear()
+        ans = menu()
+
+    if ans.lower() == 'plt':
+
+        # Get the plot type
+        plt_type = ''
+        options = ['b', 'd', 'exit']
+        while plt_type.lower() not in options:
+            print('##################################################')
+            print('Plot type: ')
+            print('- Budget vs isotope              [b]')
+            print('- Dwell time vs isotope          [d]')
+            print('- Exit software                  [exit]')
+            print('##################################################')
+            plt_type = str(input('Select an option: '))
+        if plt_type.lower() == 'exit':
+            break
+
+        #check if activity has been changed
+        if ai == False:
+            PMTAct, VETOAct, TANKAct, CONCAct, ROCKAct, WATERAct, GDAct = ActDefault()
+        activities = [PMTAct, VETOAct, TANKAct, CONCAct, ROCKAct, WATERAct, GDAct]
+
+        #check if efficiency has been changed
+        if ei == False:
+            EffDefault()
+
+        # Get the isotope and component to plot in
+        component = ''
+        comp_options = ['pmt', 'veto', 'tank', 'conc', 'rock', 'water', 'gd', 'all']
+        while component.lower() not in comp_options:
+            print('##################################################')
+            print('Select a component to study: ')
+            print(comp_options)
+            component = str(input('Select an option: '))
+
+        isotopes = ''
+        iso_options = Iso.GetIsotopes(component)
+        print('##################################################')
+        print('Select isotope(s): ')
+        print(iso_options)
+        isotopes = str(input('Select an option: ')).split(',')
+        while not set(isotopes).issubset(iso_options):
+            print('##################################################')
+            print('Select isotope(s): ')
+            print(iso_options)
+            isotopes = str(input('Select an option: ')).split(',')
+
+        # Get the range of isotope concentration
+        min_percent = -1
+        while min_percent < 0:
+            print('##################################################')
+            print('Minimum value as percentage of default: ')
+            try:
+                min_percent = input('Value: ')
+                min_percent = int(min_percent)
+            except ValueError:
+                min_percent = -1
+        max_percent = -1
+        while max_percent < 0:
+            print('##################################################')
+            print('Maximum value as percentage of default: ')
+            try:
+                max_percent = input('Value: ')
+                max_percent = int(max_percent)
+            except ValueError:
+                max_percent = -1
+        signal = 0.387
+        try:
+            signal = literal_eval(input('Input signal rate: '))
+            signal > 0
+            print('Signal rate set to = %.5e' % signal)
+        except:
+            print('Signal set to default value = %.5e' % signal)
+        days = 1.92437e+02
+        if plt_type == 'b':
+            try:
+                days = literal_eval(input('Input time to dection in days: '))
+                days > 0
+                print('Time to detection set to = %.5e' % days)
+            except:
+                print('Time to detection set to default value of = %.5e' % days)
+        sigma = 3
+        try:
+            sigma = literal_eval(input('Input significance of detection: '))
+            sigma > 0
+            print('Significance of detection set to = %.5e sigma' % sigma)
+        except:
+            print('Significance of detection set to default value of = %.5e sigma' % sigma)
+
+        # Loop over the range and fill data for plotting
+        x_data_list = []
+        y_data_list = []
+        y_label = 'Dwell time [days]'
+        orig_activities = copy.deepcopy(activities)
+        for isotope in isotopes:
+            x_data = []
+            y_data = []
+            activities = copy.deepcopy(orig_activities)
+            for percent in range(min_percent, max_percent, 1):
+                x_data.append(percent)
+                # Modify the activity
+                if component != 'all':
+                    comp_index = comp_options.index(component)
+                    iso_index = iso_options.index(isotope)
+                    activities[comp_index][iso_index] = orig_activities[comp_index][iso_index]*percent/100.
+                else:
+                    for comp in comp_options:
+                        comp_index = comp_options.index(comp)
+                        found = True
+                        try:
+                            iso_index = Iso.GetIsotopes(comp).index(isotope)
+                            activities[comp_index][iso_index] = orig_activities[comp_index][iso_index]*percent/100.
+                        except:
+                            pass
+                # Set the activities
+                PMTAct, VETOAct, TANKAct, CONCAct, ROCKAct, WATERAct, GDAct = activities
+                if plt_type == 'b':
+                    y_data.append(BackgroundRatio(signal, days, sigma))
+                    y_label = 'total/maximum background'
+                else:
+                    y_data.append(DwellTime(signal, sigma))
+            x_data_list.append(x_data)
+            y_data_list.append(y_data)
+
+        plt.cla()
+        for i, isotope in enumerate(isotopes):
+            plt.plot(np.array(x_data_list[i]), np.array(y_data_list[i]), label=isotope)
+        plt.xlabel('% of default activity in ' + component)
+        plt.ylabel(y_label)
+        plt.legend()
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
+
         #reset
         clear()
         ans = menu()

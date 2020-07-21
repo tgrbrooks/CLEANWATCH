@@ -177,3 +177,21 @@ def BGrate(Act, Eff, Decay):
         t += sum(IsoBG[i])
     return t
 
+def GetIsotopes(component):
+    if component.lower() == 'pmt':
+        return PMT
+    if component.lower() == 'veto':
+        return VETO
+    if component.lower() == 'tank':
+        return TANK
+    if component.lower() == 'conc':
+        return CONC
+    if component.lower() == 'rock':
+        return ROCK
+    if component.lower() == 'water':
+        return WATER
+    if component.lower() == 'gd':
+        return GD
+    if component.lower() == 'all':
+        output = PMT+VETO+TANK+CONC+ROCK+WATER+GD
+        return list(set(output))
