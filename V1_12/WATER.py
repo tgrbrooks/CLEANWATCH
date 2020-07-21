@@ -3,7 +3,7 @@ from math import *
 import numpy as np
 r = 10026.35e-3
 vol = np.pi*pow(r, 3)*2
-defPPM = [0.002, 0.01]
+defPPM = [0.001, 0.034] # 1e-6 Bq/kg->Bq/m^3, radionucleotides
 IsoAct = defPPM
 revIsoAct = defPPM
 IsoList = Iso.WATER

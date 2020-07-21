@@ -5,7 +5,7 @@ den = 2165
 vol = np.pi*((pow(18,2)*35.5)-pow(13,2)*25.5)
 mass = den*vol
 #print(mass)
-defPPM = [10e-3, 220e-3, 750, 0.02]
+defPPM = [10e-3, 220e-3, 750, 0.023]
 IType = ['PPM', 'PPM', 'PPM', 'Events per day']
 IsoAct = defPPM
 revIsoAct = defPPM

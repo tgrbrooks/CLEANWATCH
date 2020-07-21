@@ -1,8 +1,8 @@
 from ast import literal_eval
 #Properties
-Ms = [3.953e-25, 3.853145e-25, 6.636286e-26] #Mass [kg] [U238, Th232, K40]
-Lam = [4.916e-18, 1.57e-18, 1.842e-18] #decay constant [U238, Th232, K40]
-Abs = [1, 1, 0.000117] #natural abundance [U238, Th232, K40]
+Ms = [3.953e-25, 3.853145e-25, 6.636286e-26, 9.96e-26, 2.2742e-25] #Mass [kg] [U238, Th232, K40, Co60, Cs137]
+Lam = [4.916e-18, 1.57e-18, 1.72e-17, 4.17e-9, 7.28e-10] #decay constant [U238, Th232, K40, Co60, Cs137]
+Abs = [1, 1, 0.000117, 1, 1] #natural abundance [U238, Th232, K40]
 #Component Isotopes
 PMT =  ['U238', 'Th232', 'K40']
 VETO = ['U238', 'Th232', 'K40']
@@ -11,7 +11,8 @@ CONC = ['U238', 'Th232', 'K40']
 #TANK = ['U238', 'Th232', 'K40']
 ROCK = ['U238', 'Th232', 'K40', 'Fn']
 WATER= ['Rn222', 'Rn']
-GD =   ['U238', 'Th232', 'U235', 'U238_l', 'Th232_l', 'U235_l']
+#GD =   ['U238', 'Th232', 'U235', 'U238_l', 'Th232_l', 'U235_l']
+GD =   ['U238', 'Th232', 'U235']
 #Decay Chains
 U238 =  ['Pa234', 'Pb214', 'Bi214', 'Bi210', 'Tl210']
 Th232 = ['Ac228', 'Pb212', 'Bi211', 'Tl208']

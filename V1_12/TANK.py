@@ -8,8 +8,8 @@ vol = (2*np.pi*h*pow(r, 2))-(2*np.pi*(h-t)*pow(r-t, 2)) #m^
 den = 8000 #kg/m^3
 mass = vol*den #96200.08945836162 kg
 #print(mass)
-defPPM = [0.17, 3.8e-3, 34e-3, 19e-3, 7.7e-4]
-IType = ['PPM', 'PPM', 'PPM', 'Bq', 'Bq']
+defPPM = [9.49e-3, 4.19e-3, 1.75, 2.47e-11, 1.79e-12]
+IType = ['PPM', 'PPM', 'PPM', 'PPM', 'PPM']
 IsoAct = defPPM
 revIsoAct = defPPM
 IsoList = Iso.TANK
@@ -31,7 +31,8 @@ EffErr =   [Eff.TANKU238Err,
 def Activity(PPM):
     IAct = []
     for i in range(len(PPM)):
-        IAct.append(PPM[i]*mass)
+        #IAct.append(PPM[i]*mass)
+        IAct.append(PPM[i]*((Iso.Lam[i]*Iso.Abs[i])/(Iso.Ms[i]*1e6))*mass)
         print('Activity due to ' + Iso.TANK[i] + ' = %.5e' % IAct[i])
     return IAct
 def revActivity(BG, Eff,NEff):

@@ -83,10 +83,10 @@ GDEff = GD.IsoEff
 GDErr = GD.EffErr
 GD_Nr = [Nrate.GDU238,
          Nrate.GDTh232,
-         Nrate.GDU235,
-         Nrate.GDU238,
-         Nrate.GDTh232,
          Nrate.GDU235]
+#         Nrate.GDU238,
+#         Nrate.GDTh232,
+#         Nrate.GDU235]
 #input check
 ai = False
 ei = False
@@ -668,11 +668,14 @@ def Background():
     totBG_P += GDBG_P
     totBG_N += GDBG_N
     
-    signal = 0.387
+    signal = 0.485 #0.387
     S = signal*0.9
 
     # Total accidental rate
     totAcc = totBG_P*totBG_N*0.0001*0.05*(pow(60,2)*24)
+    print('Accidental rate = ',totAcc)
+    print('Fast neutrons = ',ROCKAct[-1])
+    print('Radionucleotides = ',WATERAct[-1])
     # + fast neutrons + radionucleotides
     totBG = totAcc+ROCKAct[-1]+WATERAct[-1]
     # + other core + 15% other neutrinos
@@ -684,10 +687,10 @@ def BackgroundRatio(signal, days, sigma):
     background = Background()
 
     # Maximum allowed background
-    signal = 0.387
+    signal = 0.485 #0.387
     S = signal*0.9
-    days = 500#1.92437e+02
-    sigma = 3#4.65
+    days = 386 #1.92437e+02
+    sigma = 4.65
     #B = (1.5*days*pow(S, 2))/(2.5*pow(sigma, 2)) - S/2.5
     #MBG = B - (S*1.15) # FIXME think this is wrong!
     R_onoff = 1.5
@@ -699,7 +702,7 @@ def DwellTime(signal, sigma):
 
     # Maximum allowed background
     B = Background()
-    signal = 0.387
+    signal = 0.485 #0.387
     S = signal*0.9
     sigma = 4.65
     R_onoff = 1.5
