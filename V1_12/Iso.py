@@ -9,8 +9,8 @@ VETO = ['U238', 'Th232', 'K40']
 TANK = ['U238', 'Th232', 'K40', 'Co60', 'Cs137']
 CONC = ['U238', 'Th232', 'K40']
 #TANK = ['U238', 'Th232', 'K40']
-ROCK = ['U238', 'Th232', 'K40', 'Fn']
-WATER= ['Rn222', 'Rn']
+ROCK = ['U238', 'Th232', 'K40']
+WATER= ['Rn222']
 #GD =   ['U238', 'Th232', 'U235', 'U238_l', 'Th232_l', 'U235_l']
 GD =   ['U238', 'Th232', 'U235']
 #Decay Chains
@@ -23,6 +23,8 @@ Cs137 = ['Cs137']
 Rn222 = ['Pb214', 'Bi214', 'Bi210', 'Tl210']
 FN =    ['Fn']
 RN =    ['Rn']
+
+
 def setPPM(Iso, PPM, Itype):
     output = []
     for i in range(len(Iso)):
@@ -61,21 +63,23 @@ def setPPM(Iso, PPM, Itype):
                     continue
             else:
                 try:
-                    x = int(x)
+                    x = float(x)
                 except:
                     output.append(PPM[i])
                     print(Itype[i] + ' for ' + Iso[i] + ' set to default value of = %.5e' % output[i])
                     continue #skips to next iteration?
-            if x < 0 or type(x) != int:
+            if x < 0 or type(x) != float:
                 output.append(PPM[i])
                 print(Itype[i] + ' for ' + Iso[i] + ' set to default value of = %.5e' % output[i])
             else:
                 output.append(x)
-                print(Itype + ' for ' + Iso[i] + ' = %.5e' % output[i])
+                print(Itype[i] + ' for ' + Iso[i] + ' = %.5e' % output[i])
     return output
 def disdef(Iso, val, t):
     for i in range(len(Iso)):
         print(t + ' for ' + Iso[i] + ' set to default value = %.5e' % val[i])
+
+
 def EffInput(Iso, IEff):
     #try:
     #    a = literal_eval(input('Input Efficiency for ' + Iso + ': '))
@@ -106,7 +110,7 @@ def EffInput(Iso, IEff):
                 print('Efficiency for ' + Iso + ' set to default value %.5e' % a)
         else:
             try:
-                a = int(a)
+                a = float(a)
             except:
                 a = IEff
                 print('Efficiency for ' + Iso + ' set to default value %.5e' % a)
@@ -117,6 +121,8 @@ def EffInput(Iso, IEff):
         else:
             pass
     return a
+
+
 def ErrInput(Iso, Eff):
     b = input('Input Efficiency Error for ' + Iso + ': ')
     if len(b) == 0:
@@ -143,7 +149,7 @@ def ErrInput(Iso, Eff):
                 print('Efficiency Error for ' + Iso + ' set to default value of = %.5e' % b)
         else:
             try:
-                b = int(b)
+                b = float(b)
             except:
                 b = Eff
                 print('Efficiency Error for ' + Iso + ' set to default value of = %.5e' % b)
@@ -154,6 +160,8 @@ def ErrInput(Iso, Eff):
         else:
             pass
     return b
+
+
 def setEff(IsoDecay, Iso, IsoEff, IsoErr):
     IEff = IsoEff
     IErr = IsoErr
@@ -163,7 +171,9 @@ def setEff(IsoDecay, Iso, IsoEff, IsoErr):
         for x in range(len(IsoDecay[i])):
             IEff[i][x] = EffInput(IsoDecay[i][x], IEff[i][x])
             IErr[i][x] = ErrInput(IsoDecay[i][x], IEff[i][x])
-        return IEff, IErr
+    return IEff, IErr
+
+
 def BGrate(Act, Eff, Decay):
     t = 0
     Err = Eff
@@ -177,6 +187,7 @@ def BGrate(Act, Eff, Decay):
             print('BG rate for ' + IsoDecay[i][x] + ' = %.5e +/- %.5e' % (IsoBG[i][x], Err[i][x]))
         t += sum(IsoBG[i])
     return t
+
 
 def GetIsotopes(component):
     if component.lower() == 'pmt':

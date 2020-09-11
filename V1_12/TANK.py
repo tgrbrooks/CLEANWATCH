@@ -28,6 +28,8 @@ EffErr =   [Eff.TANKU238Err,
             Eff.TANKK40Err,
             Eff.TANKCo60Err,
             Eff.TANKCs137Err]
+
+
 def Activity(PPM):
     IAct = []
     for i in range(len(PPM)):
@@ -35,13 +37,15 @@ def Activity(PPM):
         IAct.append(PPM[i]*((Iso.Lam[i]*Iso.Abs[i])/(Iso.Ms[i]*1e6))*mass)
         print('Activity due to ' + Iso.TANK[i] + ' = %.5e' % IAct[i])
     return IAct
-def revActivity(BG, Eff,NEff):
+
+
+def revActivity(BG, Eff, ratio):
     rIsoAct = [0 for i in range(len(IsoList))]
     for i in range(len(BG)):
         maxbg = max(BG[i])
         x = BG[i].index(maxbg)
         if Eff[i][x] != 0:
-            rIsoAct[i] = maxbg/Eff[i][x]/mass
+            rIsoAct[i] = maxbg/Eff[i][x]/mass/sqrt(ratio)
         else:
             rIsoAct[i] = 0
     return rIsoAct

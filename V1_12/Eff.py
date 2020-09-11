@@ -17,6 +17,8 @@ iso = [["234Pa_CHAIN_238U_NA", "214Pb_CHAIN_238U_NA", "214Bi_CHAIN_238U_NA", "21
         ["223Fr_CHAIN_235U_NA", "211Pb_CHAIN_235U_NA", "211Bi_CHAIN_235U_NA", "207Tl_CHAIN_235U_NA"]] #U235_l 12
 #set file
 outfile = ROOT.TFile("results.root", "READ")
+
+
 def GetEff(compNum, chainNum):
     binNum = []
     binEff = []
@@ -30,6 +32,8 @@ def GetEff(compNum, chainNum):
         binEff.append(temp)
         err.append(outfile.Get(hist).GetBinError(binNum[i]))
     return binEff, err
+
+    
 #print('histWatchman_COMP_Iso_CHAIN_IsoChain_NA')
 PMTU238, PMTU238Err = GetEff(0, 0)
 #print('PMT U238', PMTU238)
