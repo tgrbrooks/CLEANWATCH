@@ -365,6 +365,7 @@ def Background(signal=0.485, act=None):
 
     totBG_P = 0
     totBG_N = 0
+    global activity
 
     if act is not None:
         activity = act
